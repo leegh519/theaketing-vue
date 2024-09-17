@@ -23,7 +23,7 @@
     </div>
 </template>
 <script setup>
-import { ref, computed } from "vue";
+import { ref } from "vue";
 import axios from "axios";
 import { useUserStore } from '@/store/userStore';
 const userStore = useUserStore();

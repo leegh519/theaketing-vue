@@ -4,6 +4,8 @@ import App from "./App.vue";
 import router from "@/router/index.js";
 import axios from "axios";
 import { createPinia } from "pinia";
+import VCalendar from "v-calendar";
+import "v-calendar/style.css";
 
 const app = createApp(App);
 const pinia = createPinia();
@@ -13,6 +15,7 @@ axios.defaults.baseURL = apiUrl;
 axios.defaults.withCredentials = true;
 app.config.globalProperties.$axios = axios;
 
+app.use(VCalendar, {});
 app.use(pinia);
 app.use(router);
 app.mount("#app");

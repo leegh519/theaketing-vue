@@ -1,32 +1,31 @@
 <template>
-    <div class="result-card">
+    <div class="result-card" @click="toDetail(id)">
         <img :src="thumbnailImage" alt="result image" class="card-image" />
         <div class="card-content">
             <h3 class="card-title">{{ title }}</h3>
-            <p class="card-subtitle">{{ startDate }}</p>
+            <p class="card-subtitle">{{ startDate }} ~ {{ endDate }}</p>
+            <p class="card-subtitle">{{ theater.name }}</p>
         </div>
     </div>
 </template>
 
 <script setup>
+import { toRefs } from 'vue';
+import { useRouter } from 'vue-router';
+
+const router = useRouter();
+
 const props = defineProps({
-    thumbnailImage: {
-        type: String,
-        required: true,
-    },
-    title: {
-        type: String,
-        required: true,
-    },
-    startDate: {
-        type: String,
-        required: true,
-    },
-    endDate: {
-        type: String,
+    eventData: {
+        type: Object,
         required: true,
     },
 });
+const { id, thumbnailImage, title, startDate, endDate, theater } = toRefs(props.eventData);
+
+const toDetail = (id) => {
+    router.push({ name: 'DramaDetail', params: { id } })
+}
 </script>
 
 <style scoped>
