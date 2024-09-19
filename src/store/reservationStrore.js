@@ -1,12 +1,11 @@
 import { defineStore } from "pinia";
 
-export const useUserStore = defineStore("user", {
+export const userReservationStore = defineStore("reservation", {
   state: () => ({
     id: null,
   }),
   actions: {
     setId(userId) {
-      console.log(userId);
       this.id = userId;
     },
   },

@@ -23,9 +23,12 @@
     </div>
 </template>
 <script setup>
-import { ref, computed } from "vue";
-import axios from "axios";
+import { ref, getCurrentInstance } from "vue";
+import router from '@/router/index'
+import api from '@/config/axios';
 import { useUserStore } from '@/store/userStore';
+import Swal from "sweetalert2";
+const { proxy } = getCurrentInstance();
 const userStore = useUserStore();
 
 const loginForm = ref({
@@ -74,14 +77,20 @@ const handleLogin = async () => {
     loginError.value = null;
 
     try {
-        const response = await axios.post("/api/u/v1/login", {
+        const response = await api.post("/api/u/v1/login", {
             email: loginForm.value.username,
             password: loginForm.value.password,
         });
 
         userStore.setId(response.data.id);
+        router.push('/')
     } catch (error) {
-        alert(error.response?.data?.message);
+        if (error.response?.data?.message) {
+            Swal.fire({
+                text: error.response?.data?.message,
+                icon: "error",
+            });
+        }
     } finally {
         isSubmitting.value = false;
     }
