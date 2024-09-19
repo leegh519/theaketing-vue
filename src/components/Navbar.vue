@@ -16,13 +16,29 @@
 </template>
 
 <script setup>
-import { computed } from 'vue';
+import { computed, watch } from 'vue';
 import { useUserStore } from '@/store/userStore';
-const userStore = useUserStore();
-const isAuthenticated = computed(() => userStore.id !== null);
+import api from '@/config/axios';
+import Swal from 'sweetalert2';
 
-const logout = () => {
-    userStore.setId(null);
+const userStore = useUserStore();
+
+const isAuthenticated = computed(() => userStore.id != null);
+
+
+
+const logout = async () => {
+    try {
+        await api.post("/logout");
+        userStore.setId(null);
+    } catch (error) {
+        if (error.response?.data?.message) {
+            Swal.fire({
+                text: error.response?.data?.message,
+                icon: "error",
+            });
+        }
+    }
 }
 </script>
 

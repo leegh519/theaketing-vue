@@ -11,9 +11,7 @@
 
 <script setup>
 import { toRefs } from 'vue';
-import { useRouter } from 'vue-router';
-
-const router = useRouter();
+import router from '@/router/index'
 
 const props = defineProps({
     eventData: {

@@ -1,12 +1,12 @@
 <template>
-    <div class="theater-detail-page">
-        <DramaInfo :thumbnail="theater.thumbnail" :name="theater.name" :venue="theater.venue"
-            :startDate="theater.startDate" :endDate="theater.endDate" :bookingStartDate="theater.bookingStartDate"
-            :bookingEndDate="theater.bookingEndDate" :maxTicketsPerPerson="theater.maxTicketsPerPerson" />
 
-        <BookingDetails />
+    <div class="theater-detail-page" v-if="drama && Object.keys(drama).length > 0">
 
-        <TheaterDetailsImage :detailImage="theater.detailImage" />
+        <DramaInfo :eventData="drama" />
+
+        <BookingDetails :id="id" :limitCount="drama.limitCount" />
+
+        <TheaterDetailsImage :detailImage="drama.descriptionImage" />
     </div>
 </template>
 
@@ -14,18 +14,40 @@
 import DramaInfo from '../components/DramaInfo.vue';
 import BookingDetails from '../components/BookingDetails.vue';
 import TheaterDetailsImage from '../components/TheaterDetailsImage.vue';
+import api from '@/config/axios';
+import { onMounted, ref } from 'vue';
+import { useRoute } from 'vue-router';
+import Swal from 'sweetalert2';
 
-const theater = {
-    thumbnail: 'https://image.toast.com/aaaaab/ticketlink/TKL_8/ps_pst0624.jpg',
-    name: '멋진 연극',
-    venue: '공연장 A',
-    startDate: '2024-09-20',
-    endDate: '2024-10-15',
-    bookingStartDate: '2024-09-01',
-    bookingEndDate: '2024-10-10',
-    maxTicketsPerPerson: 4,
-    detailImage: 'https://image.toast.com/aaaaab/ticketlink/TKL_2/ps_info0624a_optimized.jpg'
+const route = useRoute();
+const id = route.params.id;
+
+
+
+const drama = ref({});
+
+
+onMounted(async () => {
+    await fetchDetail();
+});
+
+const fetchDetail = async () => {
+    try {
+
+        const response = await api.get(`/api/u/v1/drama/${id}`);
+        drama.value = response.data;
+
+    } catch (error) {
+        if (error.response?.data?.message) {
+            Swal.fire({
+                text: error.response?.data?.message,
+                icon: "error",
+            });
+        }
+    } finally {
+    }
 };
+
 </script>
 
 <style scoped>
@@ -33,5 +55,7 @@ const theater = {
     display: flex;
     flex-direction: column;
     gap: 20px;
+    margin: 100px auto;
+    max-width: 1000px;
 }
 </style>

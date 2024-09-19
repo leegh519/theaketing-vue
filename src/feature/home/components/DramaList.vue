@@ -13,8 +13,9 @@
 <script setup>
 import DramaListCard from './DramaListCard.vue';
 import { computed, onMounted, ref, watch, onBeforeUnmount } from 'vue';
-import axios from "axios";
+import api from '@/config/axios';
 import debounce from 'lodash/debounce';
+import Swal from 'sweetalert2';
 
 const props = defineProps({
     searchTerm: {
@@ -50,9 +51,7 @@ const fetchData = async () => {
     isLoading.value = true;
 
     try {
-        console.log(params.value);
-
-        const response = await axios.get("/api/u/v1/drama", {
+        const response = await api.get("/api/u/v1/drama", {
             params: params.value
         });
         page.value.content.push(...response.data.content);
@@ -61,7 +60,12 @@ const fetchData = async () => {
         page.value.totalPage = response.data.totalPage;
         page.value.endPage = response.data.endPage;
     } catch (error) {
-        alert(error.response?.data?.message);
+        if (error.response?.data?.message) {
+            Swal.fire({
+                text: error.response?.data?.message,
+                icon: "error",
+            });
+        }
     } finally {
         isLoading.value = false;
     }
@@ -80,7 +84,6 @@ onBeforeUnmount(() => {
 watch(() => props.searchTerm, (newSearchTerm) => {
     page.value.content = []; // 기존 데이터 초기화
     page.value.pageNum = 1; // 페이지 번호 초기화
-    console.log(newSearchTerm);
     params.value.searchValue = newSearchTerm; // 검색어 업데이트
     debouncedFetchData(); // 데이터 재요청
 });
