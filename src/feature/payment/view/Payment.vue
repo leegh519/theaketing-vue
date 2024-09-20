@@ -1,7 +1,7 @@
 <template>
     <div class="drama-detail-wrapper">
 
-        <div class="drama-detail">
+        <div class="drama-detail" v-if="dramaStore.title">
             <!-- 썸네일 이미지 -->
             <img :src="dramaStore.thumbnailImage" alt="Drama Thumbnail" class="thumbnail" />
 
@@ -31,13 +31,29 @@ import { useReservationStore } from '@/store/reservationStore';
 import api from '@/config/axios';
 import Swal from 'sweetalert2';
 import router from '@/router/index';
+import { onUnmounted, onMounted } from 'vue';
 
 const dramaStore = useDramaStore();
 const reservationStore = useReservationStore();
 
+onMounted(async () => {
+    if (dramaStore.title == null) {
+        await Swal.fire({
+            text: '결제 정보가 없어요',
+            icon: "error",
+        });
+        router.push('/')
+    } else if (reservationStore.id == null) {
+        await Swal.fire({
+            text: '결제 정보가 없어요',
+            icon: "error",
+        });
+        router.push('/')
+    }
+});
+
 
 const payment = async () => {
-    console.log('결제한다')
     try {
         const response = await api.post('/api/u/v1/payment', {
             reservationId: reservationStore.id,
@@ -58,6 +74,10 @@ const payment = async () => {
     }
 }
 
+onUnmounted(() => {
+    dramaStore.$reset();
+    reservationStore.$reset();
+})
 
 
 </script>

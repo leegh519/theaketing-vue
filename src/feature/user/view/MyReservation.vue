@@ -65,6 +65,7 @@ const pagesToShow = computed(() => {
 onMounted(() => {
     fetchData();
 });
+
 watch(
     () => pageNum.value,
     (newPageNum) => {
@@ -123,8 +124,6 @@ const cancelReservation = async (id) => {
         }
     }
 };
-
-
 </script>
 
 <style scoped>

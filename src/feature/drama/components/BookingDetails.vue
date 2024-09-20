@@ -18,7 +18,7 @@
         <!-- 남은 좌석 정보 -->
         <div class="seat-info">
             <h3>남은 좌석</h3>
-            <div v-for="showtime in showtimes" :key="showtime.id">
+            <div class="showtime" v-for="showtime in showtimes" :key="showtime.id">
                 {{ showtime.remainSeats }}석
             </div>
         </div>
@@ -105,7 +105,6 @@ const reservation = async () => {
             "showTimeId": selectedTimes.value.id,
             "ticketCount": ticketQuantity.value,
         });
-        console.log(response.data)
         reservationStore.set(response.data, selectedDate.value, selectedTimes.value, ticketQuantity.value)
         router.push(`/payment/${response.data}`);
     } catch (error) {
@@ -135,7 +134,6 @@ const handleDateSelected = (date) => {
 
 const selectShowtime = (showtime) => {
     selectedTimes.value = showtime;
-    console.log('선택된 회차:', showtime);
 };
 
 const decreaseQuantity = () => {
@@ -154,7 +152,6 @@ const bookTickets = () => {
         return;
     }
     if (userStore.id) {
-        console.log('티켓 예매:', ticketQuantity.value);
         reservation();
     } else {
         Swal.fire({
@@ -204,6 +201,7 @@ const bookTickets = () => {
     justify-content: center;
     align-items: center;
     cursor: pointer;
+    margin-bottom: 5px;
 }
 
 .showtime:hover {
