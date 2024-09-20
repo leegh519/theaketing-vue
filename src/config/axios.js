@@ -4,7 +4,6 @@ import { useUserStore } from "@/store/userStore";
 import Swal from "sweetalert2";
 
 const apiUrl = import.meta.env.VITE_API_URL;
-console.log(apiUrl);
 // axois 설정
 const api = axios.create({
   baseURL: apiUrl, // 공통으로 사용할 기본 API URL 설정

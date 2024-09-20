@@ -1,11 +1,11 @@
 <template>
     <div class="navbar">
         <div class="nav-container">
-            <div></div>
+            <div>티케팅</div>
             <nav class="nav-menu">
                 <ul>
                     <li><router-link to="/">홈</router-link></li>
-                    <li v-if="isAuthenticated"><router-link to="/signup">예매내역</router-link></li>
+                    <li v-if="isAuthenticated"><router-link to="/myReservation">예매내역</router-link></li>
                     <li v-if="!isAuthenticated"><router-link to="/login">로그인/회원가입</router-link></li>
                     <!-- <li v-if="!isAuthenticated"><router-link to="/signup">회원가입</router-link></li> -->
                     <li v-if="isAuthenticated"><router-link to="" @click="logout">로그아웃</router-link></li>
@@ -20,6 +20,7 @@ import { computed, watch } from 'vue';
 import { useUserStore } from '@/store/userStore';
 import api from '@/config/axios';
 import Swal from 'sweetalert2';
+import router from '@/router/index'
 
 const userStore = useUserStore();
 
@@ -31,6 +32,7 @@ const logout = async () => {
     try {
         await api.post("/logout");
         userStore.setId(null);
+        router.push('/');
     } catch (error) {
         if (error.response?.data?.message) {
             Swal.fire({

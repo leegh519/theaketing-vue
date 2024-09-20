@@ -6,7 +6,6 @@ export const useUserStore = defineStore("user", {
   }),
   actions: {
     setId(userId) {
-      console.log(userId);
       this.id = userId;
     },
   },

@@ -56,7 +56,14 @@ const adjustDate = (date, days) => {
 
 const disabledDates = computed(() => {
     if (props.showDates.length == 0) {
-        return [];
+        return [{
+            start: null,
+            end: new Date(),
+        },
+        {
+            start: new Date(),
+            end: null,
+        },];
     }
     const disabledRanges = [];
     let date = props.showDates[0];
