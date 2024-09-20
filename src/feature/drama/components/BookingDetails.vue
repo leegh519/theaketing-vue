@@ -41,9 +41,11 @@ import { ref, onMounted } from 'vue';
 import Calendar from './Calendar.vue'; // 달력 컴포넌트 임포트
 import api from '@/config/axios';
 import { useUserStore } from '@/store/userStore';
+import { useReservationStore } from '@/store/reservationStore';
 import router from '@/router/index'
 import Swal from 'sweetalert2';
 const userStore = useUserStore();
+const reservationStore = useReservationStore();
 
 const props = defineProps({
     id: {
@@ -59,6 +61,7 @@ const props = defineProps({
 const showtimes = ref([]);
 const showDates = ref([]);
 const selectedTimes = ref(null);
+const selectedDate = ref(null);
 
 onMounted(() => {
     fetchDate();
@@ -103,7 +106,8 @@ const reservation = async () => {
             "ticketCount": ticketQuantity.value,
         });
         console.log(response.data)
-        router.push('/payment');
+        reservationStore.set(response.data, selectedDate.value, selectedTimes.value, ticketQuantity.value)
+        router.push(`/payment/${response.data}`);
     } catch (error) {
         if (error.response?.data?.message) {
             Swal.fire({
@@ -122,6 +126,7 @@ const ticketQuantity = ref(1);
 const handleDateSelected = (date) => {
     selectedTimes.value = null
     if (date) {
+        selectedDate.value = date;
         fetchShowTimes(date.replaceAll('-', ''));
     } else {
         showtimes.value = null

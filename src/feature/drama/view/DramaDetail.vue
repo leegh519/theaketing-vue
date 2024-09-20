@@ -19,6 +19,9 @@ import { onMounted, ref } from 'vue';
 import { useRoute } from 'vue-router';
 import Swal from 'sweetalert2';
 
+import { useDramaStore } from '@/store/dramaStore'
+const dramaStore = useDramaStore();
+
 const route = useRoute();
 const id = route.params.id;
 
@@ -36,6 +39,7 @@ const fetchDetail = async () => {
 
         const response = await api.get(`/api/u/v1/drama/${id}`);
         drama.value = response.data;
+        dramaStore.set(response.data)
 
     } catch (error) {
         if (error.response?.data?.message) {

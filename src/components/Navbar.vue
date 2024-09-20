@@ -5,7 +5,7 @@
             <nav class="nav-menu">
                 <ul>
                     <li><router-link to="/">홈</router-link></li>
-                    <li v-if="isAuthenticated"><router-link to="/signup">예매내역</router-link></li>
+                    <li v-if="isAuthenticated"><router-link to="/myReservation">예매내역</router-link></li>
                     <li v-if="!isAuthenticated"><router-link to="/login">로그인/회원가입</router-link></li>
                     <!-- <li v-if="!isAuthenticated"><router-link to="/signup">회원가입</router-link></li> -->
                     <li v-if="isAuthenticated"><router-link to="" @click="logout">로그아웃</router-link></li>
