@@ -9,19 +9,23 @@
                 <div class="form-group">
                     <label for="email">이메일</label>
                     <div class="email-group">
-                        <input v-model="email" type="email" id="email" name="email" @blur="validateEmail" />
+                        <input v-model="email" type="email" id="email" name="email" @input="validateEmailAndSent" />
                         <button type="button" @click="sendVerificationCode">인증</button>
                     </div>
                     <p v-if="emailError" class="error-message">{{ emailError }}</p>
+                    <p v-if="!emailError && emailSentError" class="error-message">{{ emailSentError }}</p>
                 </div>
 
                 <!-- 인증 코드 입력 -->
                 <div class="form-group" v-if="emailSent">
                     <label for="verificationCode">인증 코드</label>
                     <div class="email-group">
-                        <input v-model="verificationCode" type="text" id="verificationCode" name="verificationCode"
-                            @blur="validateVerificationCode" /><button type="button"
-                            @click="sendVerificationCode">확인</button>
+                        <div class="email-container">
+                            <input v-model="verificationCode" type="text" id="verificationCode" name="verificationCode"
+                                @input="validateVerificationCode" />
+                            <span v-if="remainingTime >= 0" class="timer">{{ formatTime(remainingTime) }}</span>
+                        </div>
+                        <button type="button" @click="verifyCode">확인</button>
                     </div>
                     <p v-if="verificationCodeError" class="error-message">{{ verificationCodeError }}</p>
                 </div>
@@ -29,7 +33,7 @@
                 <!-- 비밀번호 입력 -->
                 <div class="form-group">
                     <label for="password">비밀번호</label>
-                    <input v-model="password" type="password" id="password" name="password" @blur="validatePassword" />
+                    <input v-model="password" type="password" id="password" name="password" @input="validatePassword" />
                     <p v-if="passwordError" class="error-message">{{ passwordError }}</p>
                 </div>
 
@@ -37,178 +41,314 @@
                 <div class="form-group">
                     <label for="confirmPassword">비밀번호 확인</label>
                     <input v-model="confirmPassword" type="password" id="confirmPassword" name="confirmPassword"
-                        @blur="validateConfirmPassword" />
+                        @input="validateConfirmPassword" />
                     <p v-if="confirmPasswordError" class="error-message">{{ confirmPasswordError }}</p>
                 </div>
 
                 <!-- 이름 입력 -->
                 <div class="form-group">
                     <label for="name">이름</label>
-                    <input v-model="name" type="text" id="name" name="name" @blur="validateName" />
+                    <input v-model="name" type="text" id="name" name="name" @input="validateName" />
                     <p v-if="nameError" class="error-message">{{ nameError }}</p>
                 </div>
 
                 <!-- 휴대폰 번호 입력 -->
                 <div class="form-group">
                     <label for="phone">휴대폰 번호</label>
-                    <input v-model="phone" type="tel" id="phone" name="phone" @blur="validatePhone" />
+                    <input v-model="phone" type="tel" id="phone" name="phone" @input="validatePhone" />
                     <p v-if="phoneError" class="error-message">{{ phoneError }}</p>
                 </div>
 
                 <!-- 회원가입 버튼 -->
-                <button type="submit" :disabled="!isFormValid">회원가입</button>
+                <button type="submit" :disabled="!isFormValid" :class="{ 'active': isFormValid }">회원가입</button>
             </form>
         </div>
     </div>
 </template>
-<script>
+<script setup>
 import { ref, computed } from "vue";
+import api from '@/config/axios'
+import Swal from "sweetalert2";
+import { useUserStore } from '@/store/userStore'
+import router from '@/router/index'
 
-export default {
-    setup() {
-        const email = ref("");
-        const emailError = ref("");
-        const emailSent = ref(false);
+const userStore = useUserStore();
 
-        const verificationCode = ref("");
-        const verificationCodeError = ref("");
+const email = ref("");
+const emailError = ref("");
+const emailSent = ref(false);
+const emailSentError = ref("");
+const remainingTime = ref(300);
 
-        const password = ref("");
-        const passwordError = ref("");
+const verificationCode = ref("");
+const verificationCodeError = ref("");
+const verifyAuthCode = ref(false);
 
-        const confirmPassword = ref("");
-        const confirmPasswordError = ref("");
+const password = ref("");
+const passwordError = ref("");
 
-        const name = ref("");
-        const nameError = ref("");
+const confirmPassword = ref("");
+const confirmPasswordError = ref("");
 
-        const phone = ref("");
-        const phoneError = ref("");
+const name = ref("");
+const nameError = ref("");
 
-        // 유효성 검사 함수들
-        const validateEmail = () => {
-            if (!email.value) {
-                emailError.value = "이메일을 입력해주세요.";
-            } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value)) {
-                emailError.value = "유효한 이메일 주소를 입력해주세요.";
-            } else {
-                emailError.value = "";
-            }
-        };
+const phone = ref("");
+const phoneError = ref("");
+let timerId = null;  // 타이머 ID를 저장할 변수
 
-        const validateVerificationCode = () => {
-            if (!verificationCode.value) {
-                verificationCodeError.value = "인증 코드를 입력해주세요.";
-            } else {
-                verificationCodeError.value = "";
-            }
-        };
+// 타이머 시작
+const startTimer = () => {
+    if (timerId !== null) {
+        clearInterval(timerId);  // 이미 타이머가 있다면 초기화
+    }
 
-        const validatePassword = () => {
-            if (!password.value) {
-                passwordError.value = "비밀번호를 입력해주세요.";
-            } else if (password.value.length < 6) {
-                passwordError.value = "비밀번호는 최소 6자리여야 합니다.";
-            } else {
-                passwordError.value = "";
-            }
-        };
+    timerId = setInterval(() => {
+        if (remainingTime.value > 0) {
+            remainingTime.value--;
+        } else {
+            clearInterval(timerId); // 타이머가 끝나면 멈춤
+            timerId = null;
+        }
+    }, 1000);
+}
 
-        const validateConfirmPassword = () => {
-            if (!confirmPassword.value) {
-                confirmPasswordError.value = "비밀번호 확인을 입력해주세요.";
-            } else if (confirmPassword.value !== password.value) {
-                confirmPasswordError.value = "비밀번호가 일치하지 않습니다.";
-            } else {
-                confirmPasswordError.value = "";
-            }
-        };
+// 타이머 멈춤 (외부에서 호출할 수 있음)
+const stopTimer = () => {
+    if (timerId !== null) {
+        clearInterval(timerId);  // 타이머 멈추기
+        timerId = null;  // 타이머 ID 초기화
+    }
+}
 
-        const validateName = () => {
-            if (!name.value) {
-                nameError.value = "이름을 입력해주세요.";
-            } else {
-                nameError.value = "";
-            }
-        };
 
-        const validatePhone = () => {
-            if (!phone.value) {
-                phoneError.value = "휴대폰 번호를 입력해주세요.";
-            } else if (!/^\d{10,11}$/.test(phone.value)) {
-                phoneError.value = "유효한 휴대폰 번호를 입력해주세요.";
-            } else {
-                phoneError.value = "";
-            }
-        };
+const formatTime = (seconds) => {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    return `${minutes}:${remainingSeconds < 10 ? '0' : ''}${remainingSeconds}`;
+}
 
-        // 이메일 인증 함수
-        const sendVerificationCode = () => {
-            validateEmail();
-            if (!emailError.value) {
-                emailSent.value = true;
-                console.log("인증 코드 발송:", email.value);
-            }
-        };
+// 유효성 검사 함수들
+const validateEmailAndSent = () => {
+    emailSent.value = false;
+    verifyAuthCode.value = false
+    verificationCode.value = ""
+    verificationCodeError.value = ""
+    validateEmail();
+    validateEmailSent();
+}
 
-        // 폼 유효성 확인
-        const isFormValid = computed(() => {
-            return (
-                !emailError.value &&
-                !verificationCodeError.value &&
-                !passwordError.value &&
-                !confirmPasswordError.value &&
-                !nameError.value &&
-                !phoneError.value &&
-                email.value &&
-                verificationCode.value &&
-                password.value &&
-                confirmPassword.value &&
-                name.value &&
-                phone.value
-            );
-        });
-
-        // 회원가입 처리 함수
-        const handleSignup = () => {
-            if (isFormValid.value) {
-                console.log("회원가입 정보:", {
-                    email: email.value,
-                    verificationCode: verificationCode.value,
-                    password: password.value,
-                    name: name.value,
-                    phone: phone.value,
-                });
-                // 실제 회원가입 처리 로직 추가
-            }
-        };
-
-        return {
-            email,
-            emailError,
-            emailSent,
-            verificationCode,
-            verificationCodeError,
-            password,
-            passwordError,
-            confirmPassword,
-            confirmPasswordError,
-            name,
-            nameError,
-            phone,
-            phoneError,
-            isFormValid,
-            validateEmail,
-            validateVerificationCode,
-            validatePassword,
-            validateConfirmPassword,
-            validateName,
-            validatePhone,
-            sendVerificationCode,
-            handleSignup,
-        };
-    },
+const validateEmail = () => {
+    if (!email.value) {
+        emailError.value = "이메일을 입력해주세요.";
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value)) {
+        emailError.value = "유효한 이메일 주소를 입력해주세요.";
+    } else {
+        emailError.value = "";
+    }
 };
+
+const validateEmailSent = () => {
+    if (!emailSent.value) {
+        emailSentError.value = "이메일 인증을 해주세요";
+    } else {
+        emailSentError.value = ""
+    }
+}
+
+const validateVerificationCode = () => {
+    if (!verificationCode.value) {
+        verificationCodeError.value = "인증 코드를 입력해주세요.";
+    } else {
+        verificationCodeError.value = "";
+    }
+};
+
+const validatePassword = () => {
+    if (!password.value) {
+        passwordError.value = "비밀번호를 입력해주세요.";
+    }
+    else if (!/^(?=.*[A-Za-z])(?=.*\d)(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{6,20}$/.test(password.value)) {
+        passwordError.value = "비밀번호는 영어, 숫자, !@#$%^&*를 하나이상 포함하여 6~20자로 설정해야 합니다.";
+    }
+    else {
+        passwordError.value = "";
+    }
+    validateConfirmPassword();
+};
+
+const validateConfirmPassword = () => {
+    if (!confirmPassword.value) {
+        confirmPasswordError.value = "비밀번호 확인을 입력해주세요.";
+    } else if (confirmPassword.value !== password.value) {
+        confirmPasswordError.value = "비밀번호가 일치하지 않습니다.";
+    } else {
+        confirmPasswordError.value = "";
+    }
+};
+
+const validateName = () => {
+    if (!name.value) {
+        nameError.value = "이름을 입력해주세요.";
+    } else {
+        nameError.value = "";
+    }
+};
+
+const validatePhone = () => {
+    if (!phone.value) {
+        phoneError.value = "휴대폰 번호를 입력해주세요.";
+    } else if (!/^\d{10,11}$/.test(phone.value)) {
+        phoneError.value = "유효한 휴대폰 번호를 입력해주세요.";
+    } else {
+        phoneError.value = "";
+    }
+};
+
+const emailDuplicateCheck = async () => {
+    try {
+        await api.post('/api/u/v1/auth/duplicate', { email: email.value })
+    } catch (error) {
+        if (error.response?.data?.message) {
+            if (error.response?.data?.code === 'A006') {
+                verificationCodeError.value = error.response?.data?.message
+            } else {
+                Swal.fire({
+                    text: error.response?.data?.message,
+                    icon: "error",
+                });
+            }
+        }
+        return false;
+    } finally {
+        return true;
+    }
+
+}
+
+// 이메일 인증 함수
+const sendVerificationCode = async () => {
+    validateEmail();
+    if (!emailError.value) {
+        if (!await emailDuplicateCheck()) {
+            return;
+        }
+        startTimer();
+        try {
+            api.post('/api/u/v1/auth', { email: email.value })
+            Swal.fire({
+                text: '인증코드를 발송했습니다.',
+                icon: "success",
+            });
+            emailSent.value = true;
+            emailSentError.value = "";
+        } catch (error) {
+            if (error.response?.data?.message) {
+                Swal.fire({
+                    text: error.response?.data?.message,
+                    icon: "error",
+                });
+            }
+        }
+    }
+};
+
+// 이메일 인증 확인
+const verifyCode = async () => {
+    validateVerificationCode();
+    if (remainingTime.value <= 0) {
+        Swal.fire({
+            text: '인증번호가 만료되었습니다.',
+            icon: "error",
+        });
+        verificationCodeError.value = '인증번호가 만료되었습니다.'
+        return;
+    }
+    if (!verificationCodeError.value) {
+        try {
+            await api.post('/api/u/v1/auth/check',
+                { email: email.value, authNumber: verificationCode.value })
+            stopTimer();
+            Swal.fire({
+                text: '인증코드를 확인했습니다.',
+                icon: "success",
+            });
+            verifyAuthCode.value = true;
+        } catch (error) {
+            if (error.response?.data?.message) {
+                Swal.fire({
+                    text: error.response?.data?.message,
+                    icon: "error",
+                });
+            }
+            verificationCodeError.value = '인증번호가 일치하지 않습니다.'
+        }
+    }
+};
+
+// 폼 유효성 확인
+const isFormValid = computed(() => {
+    return (
+        !emailError.value &&
+        !verificationCodeError.value &&
+        !passwordError.value &&
+        !confirmPasswordError.value &&
+        !nameError.value &&
+        !phoneError.value &&
+        email.value &&
+        verificationCode.value &&
+        verifyAuthCode.value &&
+        password.value &&
+        confirmPassword.value &&
+        name.value &&
+        phone.value
+    );
+});
+
+// 회원가입 처리 함수
+const handleSignup = async () => {
+    validateEmail();
+    validateEmailSent();
+    validateVerificationCode();
+    validatePassword()
+    validateConfirmPassword()
+    validateName();
+    validatePhone();
+
+    if (isFormValid.value) {
+        console.log("회원가입 정보:", {
+            email: email.value,
+            verificationCode: verificationCode.value,
+            password: password.value,
+            name: name.value,
+            phone: phone.value,
+        });
+        // 실제 회원가입 처리 로직 추가
+        try {
+            const response = await api.post('/api/u/v1/signup', {
+                email: email.value,
+                password: password.value,
+                name: name.value,
+                phone: phone.value,
+            })
+            userStore.setId(response.data.id);
+            await Swal.fire({
+                text: '회원가입이 완료되었습니다!',
+                icon: "success",
+            })
+            router.replace('/')
+
+        } catch (error) {
+            if (error.response?.data?.message) {
+                Swal.fire({
+                    text: error.response?.data?.message,
+                    icon: "error",
+                });
+            }
+        }
+    }
+};
+
 
 </script>
 <style scoped>
@@ -218,7 +358,6 @@ export default {
     width: 100%;
     /* overflow: hidden; */
     height: calc(100vh - 50px);
-    /* 전체 높이에서 Navbar의 높이 50px을 제외 */
 }
 
 /* 왼쪽 절반: 이미지 */
@@ -227,7 +366,7 @@ export default {
     background: url('@/assets/theater.jpg') no-repeat center center;
     background-size: cover;
     height: 100vh;
-    /* overflow: hidden; */
+    overflow: hidden;
     /* 이미지가 컨테이너를 꽉 채우도록 설정 */
 }
 
@@ -272,14 +411,32 @@ export default {
 }
 
 .signup-form .email-group {
+    width: 350px;
     display: flex;
     align-items: center;
+}
+
+.email-container {
+    position: relative;
+    width: 300px;
+    /* 인풋 박스 크기 */
 }
 
 .signup-form .email-group input {
     width: 300px;
     flex: 1;
     margin-right: 0.5rem;
+    padding-right: 60px;
+}
+
+.timer {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 14px;
+    color: #ff0000;
+    /* 타이머 색상 */
 }
 
 .signup-form .email-group button {
@@ -292,7 +449,8 @@ export default {
 }
 
 .signup-form button[type="submit"] {
-    width: 100%;
+    margin: 10px auto;
+    width: 350px;
     padding: 0.75rem;
     background-color: #28a745;
     color: white;
@@ -300,6 +458,7 @@ export default {
     border-radius: 4px;
     font-size: 1rem;
     cursor: pointer;
+    float: left;
 }
 
 .signup-form button:hover {

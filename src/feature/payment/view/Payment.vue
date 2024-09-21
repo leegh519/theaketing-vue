@@ -63,7 +63,7 @@ const payment = async () => {
             text: '예매가 완료되었어요!',
             icon: "success",
         });
-        router.push({ name: 'MyReservation', query: { pageNum: 1 } })
+        router.replace({ name: 'MyReservation', query: { pageNum: 1 } })
     } catch (error) {
         if (error.response?.data?.message) {
             Swal.fire({

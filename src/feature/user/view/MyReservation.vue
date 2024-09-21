@@ -1,6 +1,9 @@
 <template>
     <h1>나의 예매내역</h1>
-    <div class="reservation-list">
+    <div v-if="!reservations || reservations.length == 0">
+        예매 내역이 없어요
+    </div>
+    <div v-if="reservations && reservations.length > 0" class="reservation-list">
         <!-- 예매 내역 리스트 -->
         <div v-for="(reservation, index) in reservations" :key="reservation.id" class="reservation-item">
             <img :src="reservation.drama.thumbnailImage" alt="Thumbnail" class="thumbnail" />
