@@ -7,7 +7,7 @@ const apiUrl = import.meta.env.VITE_API_URL;
 // axois 설정
 const api = axios.create({
   baseURL: apiUrl, // 공통으로 사용할 기본 API URL 설정
-  timeout: 5000, // 요청 타임아웃 설정
+  timeout: 30000, // 요청 타임아웃 설정
   headers: {
     "Content-Type": "application/json",
   },
