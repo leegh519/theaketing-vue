@@ -1,6 +1,6 @@
 <template>
+    <h2>3분안에 결제가 완료되지 않으면 예매 정보가 사라집니다</h2>
     <div class="drama-detail-wrapper">
-
         <div class="drama-detail" v-if="dramaStore.title">
             <!-- 썸네일 이미지 -->
             <img :src="dramaStore.thumbnailImage" alt="Drama Thumbnail" class="thumbnail" />
