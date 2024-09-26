@@ -17,7 +17,7 @@ const api = axios.create({
 api.interceptors.response.use(
   (response) => {
     // 응답 데이터를 가공하거나, 로그를 기록하는 작업
-    console.log("Response:", response);
+    // console.log("Response:", response);
 
     return response;
   },
@@ -33,11 +33,9 @@ api.interceptors.response.use(
         confirmButtonText: "로그인",
         // cancelButtonText: "취소",
       }).then((result) => {
-        if (result.isConfirmed) {
-          const userStore = useUserStore();
-          userStore.setId(null);
-          router.push("/login");
-        }
+        const userStore = useUserStore();
+        userStore.setId(null);
+        router.push("/login");
       });
       return;
     }
